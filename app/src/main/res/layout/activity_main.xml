@@ -6,16 +6,13 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <LinearLayout
-        android:id="@+id/sim_number_text"
-        android:layout_width="0dp"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/list_contatos"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="32dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
 
     <Button
         android:id="@+id/get_sim_number"
@@ -23,9 +20,9 @@
         android:layout_height="wrap_content"
         android:layout_margin="32dp"
         android:text="GET NUMBER"
-        app:layout_constraintTop_toBottomOf="@id/sim_number_text"
-        app:layout_constraintStart_toStartOf="@id/sim_number_text"
-        app:layout_constraintEnd_toEndOf="@id/sim_number_text"/>
+        app:layout_constraintTop_toBottomOf="@id/list_contatos"
+        app:layout_constraintStart_toStartOf="@id/list_contatos"
+        app:layout_constraintEnd_toEndOf="@id/list_contatos"/>
 
     <TextView
         android:id="@+id/textView"

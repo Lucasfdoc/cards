@@ -8,12 +8,17 @@ import android.telephony.SubscriptionManager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.LinearLayout
 import android.widget.ToggleButton
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.simnumber.adapter.ContatoListAdapter
+import com.example.simnumber.model.Contato
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.text_view.view.*
 import java.util.*
+import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity(), Observer {
     private val fm = FileManager();
@@ -23,12 +28,18 @@ class MainActivity : AppCompatActivity(), Observer {
     private var modoGravacao = false;
     private var tempo: Long = 0;
 
+    var contatolist = ArrayList<Contato> ()
+    lateinit var listAdapter: ContatoListAdapter
+    lateinit var linearLayoutManager: LinearLayoutManager
+
+    private val ARQUIVO = "contatos.txt"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         checkPermission()
         ObservableObject.getInstance().addObserver(this);
-
+        setupView()
         val toggle: ToggleButton = findViewById(R.id.toggleButton)
         toggle.setOnCheckedChangeListener { _, isChecked ->
             modoGravacao = isChecked
@@ -39,11 +50,11 @@ class MainActivity : AppCompatActivity(), Observer {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP_MR1) {
                if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                    get_sim_number?.setOnClickListener { getSimNumber() }
-                   fm.criaDiretorio("meuDir")
+                   fm.criaDiretorio("meuDir", ARQUIVO)
                } else requestPermissions(arrayOf(Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE), PERMISSIONS)
         } else {
             get_sim_number?.setOnClickListener { getSimNumber() }
-            fm.criaDiretorio("meuDir")
+            fm.criaDiretorio("meuDir", ARQUIVO)
         }
     }
 
@@ -53,7 +64,7 @@ class MainActivity : AppCompatActivity(), Observer {
             permissions.forEachIndexed() { i, d ->
                 if (d == Manifest.permission.READ_PHONE_STATE && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                     get_sim_number?.setOnClickListener { getSimNumber() }
-                    fm.criaDiretorio("meuDir")
+                    fm.criaDiretorio("meuDir", ARQUIVO)
                 }
             }
         }
@@ -68,13 +79,14 @@ class MainActivity : AppCompatActivity(), Observer {
         //Log.d("getSubscriptionCount", "=====> $quantidade")
 
         var iccIdAtual = "";
-
-        sim_number_text?.removeAllViews()
-        list?.forEach {
+        contatolist = ArrayList<Contato>()
+        //sim_number_text?.removeAllViews()
+        list?.forEach  {
             iccIdAtual = it.iccId;
-            sim_number_text?.addView(getTextView("iccId - $iccIdAtual"))
-            sim_number_text?.addView(getTextView("countryIso - ${it.countryIso}"))
-            sim_number_text?.addView(getTextView("number - ${it.number}"))
+            contatolist.add(Contato(it.displayName.toString(),it.number))
+            //sim_number_text?.addView(getTextView("iccId - $iccIdAtual"))
+            //sim_number_text?.addView(getTextView("countryIso - ${it.countryIso}"))
+            //sim_number_text?.addView(getTextView("number - ${it.number}"))
             //sim_number_text?.addView(getTextView("mccString - ${it.mccString}"))
             //sim_number_text?.addView(getTextView("mncString - ${it.mncString}"))
             //sim_number_text?.addView(getTextView("cardId - ${it.cardId}"))
@@ -85,6 +97,7 @@ class MainActivity : AppCompatActivity(), Observer {
             fm.escreveDados(iccIdAtual + "\n")
             Log.e("iccId -", iccIdAtual)
         }
+        listAdapter.inserirdados(contatolist)
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
@@ -101,12 +114,12 @@ class MainActivity : AppCompatActivity(), Observer {
         return simList.toTypedArray()
     }
 
-    private fun getTextView(text: String): View {
+    /*private fun getTextView(text: String): View {
         val view = LayoutInflater.from(this).inflate(R.layout.text_view, sim_number_text, false)
         view?.text_view?.text = text
         return view
     }
-
+*/
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
     override fun update(observable: Observable?, data: Any) {
         if ((System.currentTimeMillis() - tempo) > 5000) {
@@ -139,7 +152,12 @@ class MainActivity : AppCompatActivity(), Observer {
             tempo = System.currentTimeMillis()
         }
     }
-
+    private fun setupView(){
+        listAdapter = ContatoListAdapter(contatolist, this)
+        linearLayoutManager = LinearLayoutManager(this)
+        list_contatos.layoutManager = linearLayoutManager
+        list_contatos.adapter = listAdapter
+    }
     companion object {
         const val PERMISSIONS = 101
     }
